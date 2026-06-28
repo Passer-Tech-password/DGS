@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import dynamic from "next/dynamic";
-
-const Header = dynamic(() => import("@/components/Header"), { ssr: false });
-const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
-const WhatsAppButton = dynamic(() => import("@/components/WhatsAppButton"), { ssr: false });
+import ClientLayout from "./ClientLayout";
 
 export const metadata: Metadata = {
   title: "DARAH Gadget Store - Premium Gadgets & Repairs",
@@ -18,11 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="antialiased min-h-screen bg-background-dark text-white font-sans">
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <WhatsAppButton />
+      <body className="antialiased min-h-screen">
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
