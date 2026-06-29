@@ -118,14 +118,15 @@ export default function Header() {
               >
                 <Search className="h-4.5 w-4.5" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-gray-400 hover:text-gold h-9 w-9"
-                onClick={handleUserClick}
-              >
-                <User className="h-4.5 w-4.5" />
-              </Button>
+              <Link href="/profile">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-gray-400 hover:text-gold h-9 w-9"
+                >
+                  <User className="h-4.5 w-4.5" />
+                </Button>
+              </Link>
               <Button 
                 variant="ghost" 
                 size="icon" 
