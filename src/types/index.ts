@@ -93,3 +93,12 @@ export interface Staff {
   phone: string;
   createdAt: Date;
 }
+
+export interface SiteImage {
+  id: string;
+  name: string;
+  cloudinaryUrl: string;
+  publicId: string;
+  category: 'hero' | 'product' | 'about' | 'other';
+  uploadedAt: Date;
+}

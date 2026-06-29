@@ -17,7 +17,8 @@ import {
   User,
   ChevronDown,
   MessageSquare,
-  LogOut
+  LogOut,
+  Image
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -39,6 +40,7 @@ const sidebarLinks = [
   { name: 'Staff', href: '/admin/staff', icon: Users },
   { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
+  { name: 'Images', href: '/admin/images', icon: Image },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
