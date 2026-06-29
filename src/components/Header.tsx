@@ -127,20 +127,21 @@ export default function Header() {
                   <User className="h-4.5 w-4.5" />
                 </Button>
               </Link>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-gray-400 hover:text-gold h-9 w-9 relative"
-                onClick={() => isHydrated && toggleWishlist('demo')}
-                title="Wishlist"
-              >
-                <Heart className={`h-4.5 w-4.5 ${isHydrated && wishlist.includes('demo') ? 'fill-gold text-gold' : ''}`} />
-                {isHydrated && wishlist.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                    {wishlist.length}
-                  </span>
-                )}
-              </Button>
+              <Link href="/wishlist">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-gray-400 hover:text-gold h-9 w-9 relative"
+                  title="Wishlist"
+                >
+                  <Heart className={`h-4.5 w-4.5 ${isHydrated && wishlist.length > 0 ? 'fill-gold text-gold' : ''}`} />
+                  {isHydrated && wishlist.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                      {wishlist.length}
+                    </span>
+                  )}
+                </Button>
+              </Link>
               <Link href="/cart">
                 <Button 
                   variant="ghost" 
