@@ -141,20 +141,21 @@ export default function Header() {
                   </span>
                 )}
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-gray-400 hover:text-gold h-9 w-9 relative"
-                onClick={handleCartClick}
-                title="Shopping Cart"
-              >
-                <ShoppingCart className="h-4.5 w-4.5" />
-                {isHydrated && cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-gold text-primary-black text-xs font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </Button>
+              <Link href="/cart">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-gray-400 hover:text-gold h-9 w-9 relative"
+                  title="Shopping Cart"
+                >
+                  <ShoppingCart className="h-4.5 w-4.5" />
+                  {isHydrated && cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-gold text-primary-black text-xs font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
               <Button
                 variant="ghost"
                 size="icon"
