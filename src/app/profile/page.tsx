@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
-  User as UserIcon,
-  ShoppingCart,
+  User,
+  ShoppingBag,
   Wrench,
   Heart,
   MapPin,
@@ -13,307 +13,251 @@ import {
   Bell,
   Settings,
   LogOut,
-  MessageCircle,
   Phone,
-  Edit3,
-  Calendar,
-  ChevronRight
+  Mail,
+  Map,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useStore } from '@/store';
 
-const sidebarLinks = [
-  { name: 'Profile Overview', href: '/profile', icon: UserIcon, active: true },
-  { name: 'Orders', href: '/profile/orders', icon: ShoppingCart },
-  { name: 'Repair Requests', href: '/profile/repairs', icon: Wrench },
-  { name: 'Saved Items', href: '/profile/saved', icon: Heart },
-  { name: 'Addresses', href: '/profile/addresses', icon: MapPin },
-  { name: 'Payment Methods', href: '/profile/payments', icon: CreditCard },
-  { name: 'Notifications', href: '/profile/notifications', icon: Bell },
-  { name: 'Account Settings', href: '/profile/settings', icon: Settings },
-];
+// Format price as ₦
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 0,
+  }).format(price).replace('NGN', '₦');
+};
 
-const recentOrders = [
-  {
-    id: 'ORD-00056',
-    name: 'iPhone 15 Pro Max 256GB',
-    price: '₦1,650,000',
-    status: 'Delivered',
-    date: 'May 28, 2024',
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=200',
-  },
-  {
-    id: 'ORD-00055',
-    name: 'MacBook Air M2 256GB SSD',
-    price: '₦1,450,000',
-    status: 'Delivered',
-    date: 'May 20, 2024',
-    image: 'https://images.unsplash.com/photo-1517336714731-489679fd66a8?w=200',
-  },
-  {
-    id: 'ORD-00054',
-    name: 'AirPods Pro 2nd Gen',
-    price: '₦350,000',
-    status: 'Delivered',
-    date: 'May 15, 2024',
-    image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=200',
-  },
-  {
-    id: 'ORD-00053',
-    name: 'Apple Watch Series 9',
-    price: '₦550,000',
-    status: 'Delivered',
-    date: 'May 10, 2024',
-    image: 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=200',
-  },
-];
+// Format date
+const formatDate = (date: Date) => {
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
 
-const repairRequests = [
-  {
-    id: 'REP-00034',
-    name: 'iPhone 13 Pro - Screen Replacement',
-    status: 'Completed',
-    date: 'May 25, 2024',
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=200',
-  },
-  {
-    id: 'REP-00033',
-    name: 'Samsung S23 Ultra - Battery Issue',
-    status: 'Repairing',
-    date: 'May 18, 2024',
-    image: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=200',
-  },
-  {
-    id: 'REP-00032',
-    name: 'MacBook Pro - Overheating',
-    status: 'Diagnosing',
-    date: 'May 12, 2024',
-    image: 'https://images.unsplash.com/photo-1517336714731-489679fd66a8?w=200',
-  },
-];
+// Status badge color
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'delivered':
+      return 'bg-green-900 text-green-400';
+    case 'repairing':
+      return 'bg-yellow-900 text-yellow-400';
+    case 'diagnosing':
+      return 'bg-blue-900 text-blue-400';
+    default:
+      return 'bg-gray-800 text-gray-400';
+  }
+};
 
-const savedItems = [
-  {
-    id: '1',
-    name: 'iPhone 15 Pro Max 256GB',
-    price: '₦1,650,000',
-    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300',
-  },
-  {
-    id: '2',
-    name: 'Samsung Galaxy S24 Ultra',
-    price: '₦1,320,000',
-    image: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=300',
-  },
-  {
-    id: '3',
-    name: 'MacBook Air M2',
-    price: '₦1,450,000',
-    image: 'https://images.unsplash.com/photo-1517336714731-489679fd66a8?w=300',
-  },
-  {
-    id: '4',
-    name: 'Apple Watch Series 9',
-    price: '₦550,000',
-    image: 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=300',
-  },
-  {
-    id: '5',
-    name: 'AirPods Pro 2nd Gen',
-    price: '₦350,000',
-    image: 'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=300',
-  },
-  {
-    id: '6',
-    name: 'iPad Air 8th Gen',
-    price: '₦800,000',
-    image: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=300',
-  },
-];
+export default function ProfilePage() {
+  const { user, orders, repairs, cart, wishlist } = useStore();
+  const [isHydrated, setIsHydrated] = useState(false);
 
-export default function UserProfilePage() {
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Calculate total spent
+  const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
+
   return (
-    <div className="min-h-screen bg-background-dark">
+    <div className="min-h-screen bg-background-dark text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left Sidebar */}
-          <div className="w-full lg:w-64 flex-shrink-0 space-y-6">
-            {/* My Account */}
-            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-              <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                <UserIcon className="h-4 w-4" />
+          {/* Left: Sidebar */}
+          <div className="w-full lg:w-72 flex-shrink-0">
+            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-5 mb-6">
+              <h3 className="text-white font-semibold mb-4 text-xs uppercase tracking-wider flex items-center gap-2">
+                <User className="h-4 w-4" />
                 MY ACCOUNT
               </h3>
               <nav className="space-y-1">
-                {sidebarLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                      link.active
-                        ? 'bg-gold text-primary-black'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                    }`}
-                  >
-                    <link.icon className="h-4.5 w-4.5" />
-                    <span>{link.name}</span>
-                  </Link>
-                ))}
-                <Button variant="ghost" className="flex items-center gap-3 px-3 py-2.5 w-full justify-start text-gray-400 hover:bg-gray-800 hover:text-white text-sm font-medium">
+                <Link href="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium bg-gold text-primary-black">
+                  <User className="h-4 w-4" />
+                  Profile Overview
+                </Link>
+                <Link href="/profile/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                  <ShoppingBag className="h-4.5 w-4.5" />
+                  Orders
+                </Link>
+                <Link href="/profile/repairs" className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                  <Wrench className="h-4.5 w-4.5" />
+                  Repair Requests
+                </Link>
+                <Link href="/wishlist" className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white">
+                  <Heart className="h-4.5 w-4.5" />
+                  Saved Items
+                </Link>
+                <button className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white w-full text-left">
+                  <MapPin className="h-4.5 w-4.5" />
+                  Addresses
+                </button>
+                <button className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white w-full text-left">
+                  <CreditCard className="h-4.5 w-4.5" />
+                  Payment Methods
+                </button>
+                <button className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white w-full text-left">
+                  <Bell className="h-4.5 w-4.5" />
+                  Notifications
+                </button>
+                <button className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white w-full text-left">
+                  <Settings className="h-4.5 w-4.5" />
+                  Account Settings
+                </button>
+                <button className="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-400 hover:bg-gray-800 hover:text-white w-full text-left mt-2">
                   <LogOut className="h-4.5 w-4.5" />
-                  <span>Logout</span>
-                </Button>
+                  Logout
+                </button>
               </nav>
             </div>
 
-            {/* Need a Repair */}
-            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-              <h3 className="text-gold font-bold mb-2">NEED A REPAIR?</h3>
+            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-5 mb-6">
+              <h3 className="text-white font-bold mb-3 text-sm">NEED A REPAIR?</h3>
               <p className="text-gray-400 text-xs mb-4">Book a professional repair service for your device.</p>
-              <Button className="w-full bg-gold hover:bg-gold/90 text-primary-black font-bold">
-                BOOK REPAIR →
-              </Button>
+              <Link href="/repair">
+                <Button className="w-full bg-gold hover:bg-gold/90 text-primary-black text-xs font-bold">
+                  BOOK REPAIR →
+                </Button>
+              </Link>
             </div>
 
-            {/* Customer Support */}
-            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-              <h3 className="text-white font-semibold mb-3">CUSTOMER SUPPORT</h3>
-              <p className="text-gray-400 text-xs mb-3">We are here to help you</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-gray-300 text-xs">
+            <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-5">
+              <h3 className="text-white font-bold mb-3 text-sm">CUSTOMER SUPPORT</h3>
+              <p className="text-gray-400 text-xs mb-3">We're here to help you</p>
+              <div className="flex flex-col gap-2 text-xs">
+                <a href="tel:+2348101234567" className="flex items-center gap-2 text-gray-400 hover:text-gold">
                   <Phone className="h-3.5 w-3.5 text-gold" />
                   <span>+234 810 123 4567</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-300 text-xs">
-                  <MessageCircle className="h-3.5 w-3.5 text-gold" />
-                  <span>support@darahgadgetstore.com</span>
-                </div>
+                </a>
+                <a href="mailto:support@darahgadz.com" className="flex items-center gap-2 text-gray-400 hover:text-gold">
+                  <Mail className="h-3.5 w-3.5 text-gold" />
+                  <span>support@darahgadz.com</span>
+                </a>
               </div>
-              <Button variant="outline" className="w-full mt-4 border-gold text-gold hover:bg-gold/10 text-xs font-medium">
-                CHAT ON WHATSAPP
-              </Button>
+              <div className="mt-4 flex items-center gap-2 text-xs">
+                <Button variant="outline" className="w-full border border-gold text-gold text-xs font-medium">
+                  CHAT ON WHATSAPP
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="flex-1 space-y-6">
+          {/* Right: Main Content */}
+          <div className="flex-1 space-y-8">
             {/* Breadcrumb */}
-            <div className="text-gray-400 text-xs mb-4">
+            <div className="text-gray-400 text-xs mb-2">
               Home <span className="mx-2">/</span> My Account <span className="mx-2">/</span> <span className="text-white">Profile</span>
             </div>
 
-            {/* Top Row: Profile + Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Profile Overview */}
-              <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-                <h2 className="text-white text-xl font-semibold mb-6">Profile Overview</h2>
-                <div className="flex items-start gap-5">
-                  {/* Avatar */}
-                  <div className="relative">
-                    <div className="w-24 h-24 rounded-full overflow-hidden">
+            {/* Profile Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left: Profile Info */}
+              <div className="lg:col-span-1">
+                <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-20 h-20 rounded-full bg-gray-800 mb-4 relative overflow-hidden">
                       <Image
                         src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop"
                         alt="Profile"
-                        width={96}
-                        height={96}
+                        fill
                         className="w-full h-full object-cover"
                       />
+                      <button className="absolute bottom-0 right-0 w-6 h-6 bg-gold text-primary-black rounded-full flex items-center justify-center">
+                        <User className="h-3 w-3" />
+                      </button>
                     </div>
-                    <div className="absolute bottom-0 right-0 w-7 h-7 bg-gold rounded-full flex items-center justify-center">
-                      <Edit3 className="h-3.5 w-3.5 text-primary-black" />
-                    </div>
-                  </div>
+                    <h2 className="text-white font-semibold text-lg">{user.name}</h2>
+                    <p className="text-gray-400 text-sm mt-1">{user.email}</p>
+                    <p className="text-gray-400 text-sm flex items-center justify-center gap-1 mt-1">
+                      <Phone className="h-3 w-3 text-gold" />
+                      {user.phone}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-2">Member since {formatDate(user.memberSince)}</p>
 
-                  {/* Info */}
-                  <div className="flex-1">
-                    <h3 className="text-white font-bold text-lg">Chinedu Okafor</h3>
-                    <p className="text-gray-400 text-sm mb-2">chinedu.okafor@gmail.com</p>
-                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
-                      <Phone className="h-3.5 w-3.5 text-gold" />
-                      <span>+234 810 123 4567</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-500 text-xs">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>Member since May 12, 2024</span>
-                    </div>
-                    <Button className="mt-4 bg-gold hover:bg-gold/90 text-primary-black text-xs font-medium">
+                    <Button className="mt-5 border border-gold text-gold hover:bg-gold/10 text-xs font-semibold">
                       EDIT PROFILE
                     </Button>
                   </div>
                 </div>
               </div>
 
-              {/* Stats Grid */}
-              <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-3">
-                      <ShoppingCart className="h-5 w-5 text-gold" />
+              {/* Right: Stats */}
+              <div className="lg:col-span-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-5 flex flex-col items-center text-center">
+                    <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center mb-3">
+                      <ShoppingBag className="h-5 w-5 text-gold" />
                     </div>
-                    <div className="text-white font-bold text-2xl">12</div>
-                    <div className="text-gray-400 text-xs mt-1">Orders</div>
-                    <div className="text-gold text-xs mt-2 cursor-pointer hover:underline">View all</div>
+                    <span className="text-white font-bold text-xl">{orders.length}</span>
+                    <span className="text-gray-400 text-xs mt-1">Orders</span>
+                    <Link href="/profile/orders" className="text-gold text-xs mt-2 hover:underline">View all</Link>
                   </div>
 
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-3">
+                  <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-5 flex flex-col items-center text-center">
+                    <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center mb-3">
                       <Wrench className="h-5 w-5 text-gold" />
                     </div>
-                    <div className="text-white font-bold text-2xl">3</div>
-                    <div className="text-gray-400 text-xs mt-1">Repair Requests</div>
-                    <div className="text-gold text-xs mt-2 cursor-pointer hover:underline">View all</div>
+                    <span className="text-white font-bold text-xl">{repairs.length}</span>
+                    <span className="text-gray-400 text-xs mt-1">Repair Requests</span>
+                    <Link href="/profile/repairs" className="text-gold text-xs mt-2 hover:underline">View all</Link>
                   </div>
 
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-3">
+                  <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-5 flex flex-col items-center text-center">
+                    <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center mb-3">
                       <Heart className="h-5 w-5 text-gold" />
                     </div>
-                    <div className="text-white font-bold text-2xl">8</div>
-                    <div className="text-gray-400 text-xs mt-1">Saved Items</div>
-                    <div className="text-gold text-xs mt-2 cursor-pointer hover:underline">View all</div>
+                    <span className="text-white font-bold text-xl">{wishlist.length}</span>
+                    <span className="text-gray-400 text-xs mt-1">Saved Items</span>
+                    <Link href="/wishlist" className="text-gold text-xs mt-2 hover:underline">View all</Link>
                   </div>
 
-                  <div className="text-center">
-                    <div className="w-12 h-12 mx-auto bg-gray-800 rounded-lg flex items-center justify-center mb-3">
+                  <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-5 flex flex-col items-center text-center">
+                    <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center mb-3">
                       <CreditCard className="h-5 w-5 text-gold" />
                     </div>
-                    <div className="text-white font-bold text-2xl">₦680,000</div>
-                    <div className="text-gray-400 text-xs mt-1">Total Spent</div>
-                    <div className="text-gold text-xs mt-2 cursor-pointer hover:underline">View details</div>
+                    <span className="text-gold font-bold text-xl">{formatPrice(totalSpent)}</span>
+                    <span className="text-gray-400 text-xs mt-1">Total Spent</span>
+                    <button className="text-gold text-xs mt-2 hover:underline">View details</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Recent Orders & Repair Requests */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Orders & Repairs */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Recent Orders */}
               <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-white font-semibold">Recent Orders</h2>
+                  <h3 className="text-white font-semibold">Recent Orders</h3>
                   <Link href="/profile/orders" className="text-gold text-xs flex items-center gap-1 hover:underline">
                     View All Orders <ChevronRight className="h-3 w-3" />
                   </Link>
                 </div>
-                <div className="space-y-3">
-                  {recentOrders.map((order) => (
-                    <div key={order.id} className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-lg">
-                      <div className="w-12 h-12 flex-shrink-0 bg-gray-700 rounded overflow-hidden">
+                <div className="space-y-4">
+                  {orders.slice(0, 3).map((order) => (
+                    <div key={order.id} className="flex items-center gap-4 border-b border-gray-800 pb-4 last:border-0 last:pb-0">
+                      <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         <Image
-                          src={order.image}
-                          alt={order.name}
+                          src={order.items[0].productImage}
+                          alt={order.items[0].productName}
                           width={48}
                           height={48}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{order.name}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-white text-sm font-medium truncate">{order.items[0].productName}</p>
+                          <span className={`text-xs px-2 py-0.5 rounded ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </div>
                         <p className="text-gray-500 text-xs">Order ID: {order.id}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-gold text-sm font-medium">{order.price}</p>
-                        <p className="text-green-500 text-xs">{order.status}</p>
-                        <p className="text-gray-500 text-xs">{order.date}</p>
+                        <p className="text-gray-400 text-xs">{formatDate(order.createdAt)}</p>
                       </div>
                     </div>
                   ))}
@@ -323,68 +267,78 @@ export default function UserProfilePage() {
               {/* Repair Requests */}
               <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
                 <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-white font-semibold">Repair Requests</h2>
+                  <h3 className="text-white font-semibold">Repair Requests</h3>
                   <Link href="/profile/repairs" className="text-gold text-xs flex items-center gap-1 hover:underline">
                     View All Repairs <ChevronRight className="h-3 w-3" />
                   </Link>
                 </div>
-                <div className="space-y-3">
-                  {repairRequests.map((repair) => (
-                    <div key={repair.id} className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-lg">
-                      <div className="w-12 h-12 flex-shrink-0 bg-gray-700 rounded overflow-hidden">
+                <div className="space-y-4">
+                  {repairs.slice(0, 3).map((repair) => (
+                    <div key={repair.id} className="flex items-center gap-4 border-b border-gray-800 pb-4 last:border-0 last:pb-0">
+                      <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         <Image
-                          src={repair.image}
-                          alt={repair.name}
+                          src={repair.deviceImage}
+                          alt={repair.deviceType}
                           width={48}
                           height={48}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{repair.name}</p>
-                        <p className="text-gray-500 text-xs">ID: #{repair.id}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-xs px-2 py-1 rounded ${repair.status === 'Completed' ? 'bg-green-500/20 text-green-500' : repair.status === 'Repairing' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-blue-500/20 text-blue-500'}`}>
-                          {repair.status}
-                        </p>
-                        <p className="text-gray-500 text-xs mt-1">{repair.date}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-white text-sm font-medium truncate">{repair.deviceType} - {repair.repairCategory}</p>
+                          <span className={`text-xs px-2 py-0.5 rounded ${getStatusColor(repair.status)}`}>
+                            {repair.status}
+                          </span>
+                        </div>
+                        <p className="text-gray-500 text-xs">Ticket: {repair.ticketNumber}</p>
+                        <p className="text-gray-400 text-xs">{formatDate(repair.createdAt)}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <Button className="w-full mt-4 bg-gold hover:bg-gold/90 text-primary-black font-medium">
-                  BOOK A NEW REPAIR →
-                </Button>
+
+                <div className="mt-6 pt-4 border-t border-gray-800">
+                  <Link href="/repair">
+                    <Button className="w-full bg-gold hover:bg-gold/90 text-primary-black text-xs font-bold">
+                      BOOK A NEW REPAIR →
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
 
-            {/* Saved Items */}
+            {/* Saved Items Preview */}
             <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-white font-semibold">Saved Items</h2>
-                <Link href="/profile/saved" className="text-gold text-xs flex items-center gap-1 hover:underline">
+                <h3 className="text-white font-semibold">Saved Items</h3>
+                <Link href="/wishlist" className="text-gold text-xs flex items-center gap-1 hover:underline">
                   View All Saved Items <ChevronRight className="h-3 w-3" />
                 </Link>
               </div>
+
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {savedItems.map((item) => (
-                  <div key={item.id} className="bg-gray-800/50 rounded-lg p-3 group">
-                    <div className="aspect-square bg-gray-700 rounded-md mb-3 overflow-hidden relative">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        className="object-cover"
-                      />
-                      <button className="absolute top-2 right-2 w-7 h-7 bg-black/50 rounded-full flex items-center justify-center text-gold">
-                        <Heart className="h-3.5 w-3.5 fill-gold" />
-                      </button>
+                {wishlist.slice(0, 6).map((productId) => {
+                  const product = useStore.getState().products.find(p => p.id === productId);
+                  if (!product) return null;
+                  return (
+                    <div key={product.id} className="bg-gray-800 rounded-xl overflow-hidden group">
+                      <div className="relative aspect-square">
+                        <Image
+                          src={product.images[0]}
+                          alt={product.name}
+                          fill
+                          className="w-full h-full object-cover"
+                        />
+                        <Heart className="absolute top-2 right-2 w-4 h-4 text-gold fill-gold" />
+                      </div>
+                      <div className="p-3">
+                        <p className="text-white text-xs truncate">{product.name}</p>
+                        <p className="text-gold font-semibold text-sm mt-1">{formatPrice(product.price)}</p>
+                      </div>
                     </div>
-                    <h4 className="text-white text-xs font-medium truncate mb-1">{item.name}</h4>
-                    <p className="text-gold text-sm font-bold">{item.price}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
